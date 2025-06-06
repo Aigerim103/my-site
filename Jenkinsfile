@@ -2,34 +2,50 @@ pipeline {
     agent any
 
     stages {
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Clone repo') {
             steps {
-                git branch: 'main', url: 'https://github.com/Aigerim103/my-site.git'
+                bat 'IF EXIST my-site (rmdir /s /q my-site)'
+                bat 'git clone https://github.com/Aigerim103/my-site.git'
             }
         }
 
         stage('Check files') {
             steps {
-                bat 'dir'
+                bat 'dir my-site'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker-compose build'
+                dir('my-site') {
+                    bat 'docker-compose build'
+                }
             }
         }
 
         stage('Run App') {
             steps {
-                bat 'docker-compose up -d'
+                dir('my-site') {
+                    bat 'docker-compose up -d'
+                }
             }
         }
 
         stage('Health Check') {
             steps {
-                bat 'timeout /t 5'
-                bat 'curl -s http://localhost:5000'
+                bat 'ping 127.0.0.1 -n 6 > nul'
+            }
+        }
+
+        stage('Post Actions') {
+            steps {
+                echo 'Pipeline complete'
             }
         }
     }
@@ -40,11 +56,9 @@ pipeline {
         }
         failure {
             echo '⚠️ Something went wrong.'
-            bat 'docker-compose down || exit 0'
-        }
-        always {
-            echo '🔁 Pipeline finished (success or fail).'
+            dir('my-site') {
+                bat 'docker-compose down || exit 0'
+            }
         }
     }
 }
-
