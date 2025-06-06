@@ -36,11 +36,12 @@ pipeline {
             }
         }
 
-        stage('Health Check') {
-            steps {
-                bat 'timeout /t 5 >nul'
-            }
-        }
+       stage('Health Check') {
+    steps {
+        echo 'Waiting 5 seconds for the container to settle...'
+        bat 'ping 127.0.0.1 -n 6 > nul'
+    }
+}
     }
 
     post {
