@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        COMPOSE_DOCKER_CLI_BUILD = '1'
-        DOCKER_BUILDKIT = '1'
-    }
-
     stages {
         stage('Checkout SCM') {
             steps {
@@ -15,15 +10,14 @@ pipeline {
 
         stage('Clone repo') {
             steps {
+                bat 'IF EXIST my-site (rmdir /s /q my-site)'
                 bat 'git clone https://github.com/Aigerim103/my-site.git'
             }
         }
 
         stage('Check files') {
             steps {
-                dir('my-site') {
-                    bat 'dir'
-                }
+                bat 'dir my-site'
             }
         }
 
@@ -45,8 +39,13 @@ pipeline {
 
         stage('Health Check') {
             steps {
-                echo 'Waiting for app to start...'
                 bat 'ping 127.0.0.1 -n 6 > nul'
+            }
+        }
+
+        stage('Post Actions') {
+            steps {
+                echo 'Pipeline complete'
             }
         }
     }
@@ -63,4 +62,3 @@ pipeline {
         }
     }
 }
-
