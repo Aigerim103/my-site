@@ -28,7 +28,7 @@ pipeline {
 
         stage('Health Check') {
             steps {
-                bat 'timeout /t 5'
+                bat 'timeout /t 5 >nul'
                 bat 'curl -s http://localhost:5000'
             }
         }
