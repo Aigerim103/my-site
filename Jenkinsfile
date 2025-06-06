@@ -11,19 +11,18 @@ pipeline {
         stage('Check files') {
             steps {
                 bat 'dir'
-                bat 'cd my-site && dir'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                bat 'cd my-site && docker-compose build'
+                bat 'docker-compose build'
             }
         }
 
         stage('Run App') {
             steps {
-                bat 'cd my-site && docker-compose up -d'
+                bat 'docker-compose up -d'
             }
         }
 
@@ -41,13 +40,11 @@ pipeline {
         }
         failure {
             echo '⚠️ Something went wrong.'
-            // на всякий случай попробуем остановить контейнеры
-            bat 'cd my-site && docker-compose down || exit 0'
+            bat 'docker-compose down || exit 0'
         }
         always {
             echo '🔁 Pipeline finished (success or fail).'
         }
     }
 }
-
 
