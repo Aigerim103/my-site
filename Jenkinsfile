@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        COMPOSE_DOCKER_CLI_BUILD = '1'
+        DOCKER_BUILDKIT = '1'
+    }
+
     stages {
         stage('Checkout SCM') {
             steps {
@@ -16,7 +21,9 @@ pipeline {
 
         stage('Check files') {
             steps {
-                bat 'dir my-site'
+                dir('my-site') {
+                    bat 'dir'
+                }
             }
         }
 
@@ -36,12 +43,12 @@ pipeline {
             }
         }
 
-       stage('Health Check') {
-    steps {
-        echo 'Waiting 5 seconds for the container to settle...'
-        bat 'ping 127.0.0.1 -n 6 > nul'
-    }
-}
+        stage('Health Check') {
+            steps {
+                echo 'Waiting for app to start...'
+                bat 'ping 127.0.0.1 -n 6 > nul'
+            }
+        }
     }
 
     post {
