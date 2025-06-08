@@ -1,27 +1,27 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Checkout SCM') {
-            steps {
-                checkout scm
-            }
-        }
+    environment {
+        VERSION = "v1.0-${BUILD_NUMBER}-${new Date().format('yyyyMMdd-HHmm')}"
+    }
 
+    stages {
         stage('Clone repo') {
             steps {
-                bat 'IF EXIST my-site (rmdir /s /q my-site)'
-                bat 'git clone https://github.com/Aigerim103/my-site.git'
+                git 'https://github.com/твоя-ссылка-на-репозиторий.git'
             }
         }
 
-        stage('Check files') {
+        stage('Set version') {
             steps {
-                bat 'dir my-site'
+                script {
+                    writeFile file: 'version.txt', text: "${VERSION}"
+                    echo "🔖 App version set to: ${VERSION}"
+                }
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker image') {
             steps {
                 dir('my-site') {
                     bat 'docker-compose build'
@@ -29,7 +29,7 @@ pipeline {
             }
         }
 
-        stage('Run App') {
+        stage('Run containers') {
             steps {
                 dir('my-site') {
                     bat 'docker-compose up -d'
@@ -37,15 +37,17 @@ pipeline {
             }
         }
 
-        stage('Health Check') {
+        stage('Health check') {
             steps {
-                bat 'ping 127.0.0.1 -n 6 > nul'
-            }
-        }
-
-        stage('Post Actions') {
-            steps {
-                echo 'Pipeline complete'
+                script {
+                    sleep 5 // wait for container to start
+                    def response = bat(script: 'curl -s -o nul -w "%{http_code}" http://localhost:5000', returnStdout: true).trim()
+                    if (response != "200") {
+                        error("❌ Health check failed with response code: ${response}")
+                    } else {
+                        echo "✅ Health check passed!"
+                    }
+                }
             }
         }
     }
@@ -53,12 +55,19 @@ pipeline {
     post {
         success {
             echo '🎉 Deployment successful!'
+            mail to: 'your-email@example.com',
+                 subject: '✅ Build Success',
+                 body: "Jenkins job '${env.JOB_NAME}' #${env.BUILD_NUMBER} completed successfully."
         }
         failure {
             echo '⚠️ Something went wrong.'
             dir('my-site') {
                 bat 'docker-compose down || exit 0'
             }
+            mail to: 'your-email@example.com',
+                 subject: '❌ Build Failed',
+                 body: "Jenkins job '${env.JOB_NAME}' #${env.BUILD_NUMBER} failed."
         }
     }
 }
+
