@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Clone repo') {
             steps {
-                git 'https://github.com/твоя-ссылка-на-репозиторий.git'
+                git 'https://github.com/Aigerim103/my-site.git'
             }
         }
 
@@ -55,7 +55,7 @@ pipeline {
     post {
         success {
             echo '🎉 Deployment successful!'
-            mail to: 'your-email@example.com',
+            mail to: 'aigerim95.akk@gmail.com',
                  subject: '✅ Build Success',
                  body: "Jenkins job '${env.JOB_NAME}' #${env.BUILD_NUMBER} completed successfully."
         }
@@ -64,7 +64,7 @@ pipeline {
             dir('my-site') {
                 bat 'docker-compose down || exit 0'
             }
-            mail to: 'your-email@example.com',
+            mail to: 'aigerim95.akk@gmail.com',
                  subject: '❌ Build Failed',
                  body: "Jenkins job '${env.JOB_NAME}' #${env.BUILD_NUMBER} failed."
         }
